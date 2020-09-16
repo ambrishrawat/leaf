@@ -13,8 +13,6 @@ from utils.tf_utils import graph_size
 
 import sys
 sys.path.append('/Users/ambrish/github/adversarial-robustness-toolbox/')
-from art.estimators.classification import TensorFlowClassifier
-from art.defences.trainer import AdversarialTrainerMadryPGD
 
 class Model(ABC):
 
@@ -26,31 +24,11 @@ class Model(ABC):
         self.graph = tf.Graph()
         with self.graph.as_default():
             tf.set_random_seed(123 + self.seed)
-            self.features, self.labels, self.train_op, self.eval_metric_ops, self.loss, self.logits = self.create_model()
+            self.features, self.labels, self.train_op, self.eval_metric_ops, self.loss = self.create_model()
             self.saver = tf.train.Saver()
         self.sess = tf.Session(graph=self.graph)
 
         self.size = graph_size(self.graph)
-
-        self.classifier = TensorFlowClassifier(
-            clip_values=(0,1),
-            input_ph=self.features,
-            output=self.logits,
-            labels_ph=self.labels,
-            train=self.train_op,
-            loss=self.loss,
-            learning=None,
-            sess=self.sess,
-            preprocessing_defences=[],
-        )
-
-        self.adv_trainer = AdversarialTrainerMadryPGD(
-            self.classifier,
-            nb_epochs=1,
-            eps=0.3,
-            eps_step=0.01,
-            max_iter=10,
-        )
 
         with self.graph.as_default():
             self.sess.run(tf.global_variables_initializer())
@@ -127,13 +105,12 @@ class Model(ABC):
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
 
-            self.adv_trainer.fit(input_data, target_data)
-            # with self.graph.as_default():
-            #     self.sess.run(self.train_op,
-            #         feed_dict={
-            #             self.features: input_data,
-            #             self.labels: target_data
-            #         })
+            with self.graph.as_default():
+                self.sess.run(self.train_op,
+                    feed_dict={
+                        self.features: input_data,
+                        self.labels: target_data
+                    })
 
     def test(self, data):
         """
