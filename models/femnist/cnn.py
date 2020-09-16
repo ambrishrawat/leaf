@@ -45,7 +45,7 @@ class ClientModel(Model):
             loss=loss,
             global_step=tf.train.get_global_step())
         eval_metric_ops = tf.count_nonzero(tf.equal(labels, predictions["classes"]))
-        return features, labels, train_op, eval_metric_ops, loss
+        return features, labels, train_op, eval_metric_ops, loss, logits
 
     def process_x(self, raw_x_batch):
         return np.array(raw_x_batch)
