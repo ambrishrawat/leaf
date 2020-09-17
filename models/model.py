@@ -59,7 +59,7 @@ class Model(ABC):
         #     num_random_init=1,
         # )
 
-        self.adv_trainer = AdversarialTrainer(self.classifier, self.attack, ratio=1.0)
+        self.adv_trainer = AdversarialTrainer(self.classifier, self.attack, ratio=0.0)
 
         with self.graph.as_default():
             self.sess.run(tf.global_variables_initializer())
