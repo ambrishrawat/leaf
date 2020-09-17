@@ -46,7 +46,7 @@ class Model(ABC):
         )
 
         self.attack = ProjectedGradientDescent(
-            self.classifier, eps=0.1, eps_step=0.01, max_iter=40, num_random_init=1,
+            self.classifier, eps=0.3, eps_step=0.01, max_iter=40, num_random_init=1,
         )
 
         # self.adv_trainer = AdversarialTrainerMadryPGD(
@@ -59,7 +59,7 @@ class Model(ABC):
         #     num_random_init=1,
         # )
 
-        self.adv_trainer = AdversarialTrainer(self.classifier, self.attack, ratio=0.0)
+        self.adv_trainer = AdversarialTrainer(self.classifier, self.attack, ratio=0.1)
 
         with self.graph.as_default():
             self.sess.run(tf.global_variables_initializer())
@@ -131,11 +131,11 @@ class Model(ABC):
 
     def run_epoch(self, data, batch_size):
 
+        print(data['x'].shape)
         for batched_x, batched_y in batch_data(data, batch_size, seed=self.seed):
             
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
-            print(np.min(input_data), np.max(input_data), input_data.shape, target_data.shape)
             self.adv_trainer.fit(input_data, target_data, batch_size=input_data.shape[0], nb_epochs=1)
             # with self.graph.as_default():
             #     self.sess.run(self.train_op,
