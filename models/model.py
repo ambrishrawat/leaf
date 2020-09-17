@@ -131,7 +131,7 @@ class Model(ABC):
 
     def run_epoch(self, data, batch_size):
 
-        print(data['x'].shape)
+        print(len(data['x']))
         for batched_x, batched_y in batch_data(data, batch_size, seed=self.seed):
             
             input_data = self.process_x(batched_x)
