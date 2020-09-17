@@ -14,7 +14,8 @@ from utils.tf_utils import graph_size
 import sys
 sys.path.append('/Users/ambrish/github/adversarial-robustness-toolbox/')
 from art.estimators.classification import TensorFlowClassifier
-from art.defences.trainer import AdversarialTrainerMadryPGD
+from art.defences.trainer import AdversarialTrainerMadryPGD, AdversarialTrainer
+from art.attacks.evasion import ProjectedGradientDescent
 
 class Model(ABC):
 
@@ -44,13 +45,21 @@ class Model(ABC):
             preprocessing_defences=[],
         )
 
-        self.adv_trainer = AdversarialTrainerMadryPGD(
-            self.classifier,
-            nb_epochs=1,
-            eps=0.3,
-            eps_step=0.01,
-            max_iter=10,
+        self.attack = ProjectedGradientDescent(
+            self.classifier, eps=0.1, eps_step=0.01, max_iter=40, num_random_init=1,
         )
+
+        # self.adv_trainer = AdversarialTrainerMadryPGD(
+        #     self.classifier,
+        #     nb_epochs=1,
+        #     eps=0.1,
+        #     eps_step=0.01,
+        #     max_iter=10,
+        #     batch_size=10,
+        #     num_random_init=1,
+        # )
+
+        self.adv_trainer = AdversarialTrainer(self.classifier, self.attack, ratio=1.0)
 
         with self.graph.as_default():
             self.sess.run(tf.global_variables_initializer())
@@ -126,8 +135,8 @@ class Model(ABC):
             
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
-
-            self.adv_trainer.fit(input_data, target_data)
+            print(np.min(input_data), np.max(input_data), input_data.shape, target_data.shape)
+            self.adv_trainer.fit(input_data, target_data, batch_size=input_data.shape[0], nb_epochs=1)
             # with self.graph.as_default():
             #     self.sess.run(self.train_op,
             #         feed_dict={
