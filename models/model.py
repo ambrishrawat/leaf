@@ -143,7 +143,7 @@ class Model(ABC):
             #             self.labels: target_data
             #         })
 
-    def test(self, data):
+    def test(self, data, set_to_use='test'):
         """
         Tests the current model on the given data.
 
@@ -160,9 +160,10 @@ class Model(ABC):
                 feed_dict={self.features: x_vecs, self.labels: labels}
             )
         acc = float(tot_acc) / x_vecs.shape[0]
-        preds = self.attack.generate(x_vecs, labels)
-        correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)
-        print('Test\t',correct_, '\t', x_vecs.shape[0], '\t', correct_/x_vecs.shape[0])
+        if set_to_use == 'test' or set_to_use == 'eval':
+            preds = self.attack.generate(x_vecs, labels)
+            correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)
+            print('Test\t',correct_, '\t', x_vecs.shape[0], '\t', correct_/x_vecs.shape[0])
         # print(
         #     "Accuracy on original PGD adversarial samples after adversarial training: %.2f%%"
         #     % (np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)

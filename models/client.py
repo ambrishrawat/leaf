@@ -53,7 +53,7 @@ class Client:
             data = self.train_data
         elif set_to_use == 'test' or set_to_use == 'val':
             data = self.eval_data
-        return self.model.test(data)
+        return self.model.test(data, set_to_use=set_to_use)
 
     @property
     def num_test_samples(self):
