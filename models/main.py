@@ -179,7 +179,7 @@ def print_metrics(metrics, weights, prefix=''):
                  np.average(ordered_metric, weights=ordered_weights),
                  np.percentile(ordered_metric, 10),
                  np.percentile(ordered_metric, 50),
-                 np.percentile(ordered_metric, 90)))
+                 np.percentile(ordered_metric, 90)), flush=True)
 
 
 if __name__ == '__main__':

@@ -163,7 +163,7 @@ class Model(ABC):
         if set_to_use == 'test' or set_to_use == 'eval':
             preds = self.attack.generate(x_vecs, labels)
             correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)
-            print('Test\t',correct_, '\t', x_vecs.shape[0], '\t', correct_/x_vecs.shape[0])
+            print('Test\t',correct_, '\t', x_vecs.shape[0], '\t', correct_/x_vecs.shape[0], flush=True)
         # print(
         #     "Accuracy on original PGD adversarial samples after adversarial training: %.2f%%"
         #     % (np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)
