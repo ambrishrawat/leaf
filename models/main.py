@@ -69,18 +69,26 @@ def main():
     print('--- Random Initialization ---')
     stat_writer_fn = get_stat_writer_function(client_ids, client_groups, client_num_samples, args)
     sys_writer_fn = get_sys_writer_function(args)
-    print_stats(0, server, clients, client_num_samples, args, stat_writer_fn, args.use_val_set)
+    # print_stats(0, server, clients, client_num_samples, args, stat_writer_fn, args.use_val_set)
 
     # Simulate training
     for i in range(num_rounds):
-        print('--- Round %d of %d: Training %d Clients ---' % (i + 1, num_rounds, clients_per_round))
+        if i < 300:
+            ratio = 0.1
+        elif i >= 300 and i<500:
+            ratio = 0.2
+        else:
+            ratio = 0.3
+
+        print('--- Round %d of %d: Training %d Clients ratio %f---' % (i + 1, num_rounds, clients_per_round, ratio))
 
         # Select clients to train this round
         server.select_clients(i, online(clients), num_clients=clients_per_round)
         c_ids, c_groups, c_num_samples = server.get_clients_info(server.selected_clients)
 
+
         # Simulate server model training on selected clients' data
-        sys_metrics = server.train_model(num_epochs=args.num_epochs, batch_size=args.batch_size, minibatch=args.minibatch)
+        sys_metrics = server.train_model(num_epochs=args.num_epochs, batch_size=args.batch_size, minibatch=args.minibatch, ratio=ratio)
         sys_writer_fn(i + 1, c_ids, sys_metrics, c_groups, c_num_samples)
         
         # Update server model

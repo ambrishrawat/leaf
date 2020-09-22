@@ -109,7 +109,7 @@ class Model(ABC):
         """
         return None, None, None, None, None, None
 
-    def train(self, data, num_epochs=1, batch_size=10):
+    def train(self, data, num_epochs=1, batch_size=10, ratio=0.1):
         """
         Trains the client model.
 
@@ -123,19 +123,26 @@ class Model(ABC):
                 corresponding to a variable in the resulting graph
         """
         for _ in range(num_epochs):
-            self.run_epoch(data, batch_size)
+            self.run_epoch(data, batch_size, ratio)
 
         update = self.get_params()
         comp = num_epochs * (len(data['y'])//batch_size) * batch_size * self.flops
         return comp, update
 
-    def run_epoch(self, data, batch_size):
+    def run_epoch(self, data, batch_size, ratio):
 
         for batched_x, batched_y in batch_data(data, batch_size, seed=self.seed):
             
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
+
+            self.attack = ProjectedGradientDescent(
+                self.classifier, eps=0.3, eps_step=0.01, max_iter=40, num_random_init=1,
+            )
+
+            self.adv_trainer = AdversarialTrainer(self.classifier, self.attack, ratio=ratio)
             self.adv_trainer.fit(input_data, target_data, batch_size=input_data.shape[0], nb_epochs=1)
+
             # with self.graph.as_default():
             #     self.sess.run(self.train_op,
             #         feed_dict={
@@ -160,10 +167,10 @@ class Model(ABC):
                 feed_dict={self.features: x_vecs, self.labels: labels}
             )
         acc = float(tot_acc) / x_vecs.shape[0]
-        if set_to_use == 'test' or set_to_use == 'eval':
-            preds = self.attack.generate(x_vecs, labels)
-            correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)
-            print('Test\t',correct_, '\t', x_vecs.shape[0], '\t', correct_/x_vecs.shape[0], flush=True)
+        # if set_to_use == 'test' or set_to_use == 'eval':
+        #     preds = self.attack.generate(x_vecs, labels)
+        #     correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)
+        #     print('Test\t',correct_, '\t', x_vecs.shape[0], '\t', correct_/x_vecs.shape[0], flush=True)
         # print(
         #     "Accuracy on original PGD adversarial samples after adversarial training: %.2f%%"
         #     % (np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)

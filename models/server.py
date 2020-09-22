@@ -28,7 +28,7 @@ class Server:
 
         return [(c.num_train_samples, c.num_test_samples) for c in self.selected_clients]
 
-    def train_model(self, num_epochs=1, batch_size=10, minibatch=None, clients=None):
+    def train_model(self, num_epochs=1, batch_size=10, minibatch=None, clients=None, ratio=0.1):
         """Trains self.model on given clients.
         
         Trains model on self.selected_clients if clients=None;
@@ -57,7 +57,7 @@ class Server:
                    LOCAL_COMPUTATIONS_KEY: 0} for c in clients}
         for c in clients:
             c.model.set_params(self.model)
-            comp, num_samples, update = c.train(num_epochs, batch_size, minibatch)
+            comp, num_samples, update = c.train(num_epochs, batch_size, minibatch, ratio)
 
             sys_metrics[c.id][BYTES_READ_KEY] += c.model.size
             sys_metrics[c.id][BYTES_WRITTEN_KEY] += c.model.size
