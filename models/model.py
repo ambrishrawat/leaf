@@ -167,9 +167,12 @@ class Model(ABC):
                 feed_dict={self.features: x_vecs, self.labels: labels}
             )
         acc = float(tot_acc) / x_vecs.shape[0]
-        # if set_to_use == 'test' or set_to_use == 'eval':
-        #     preds = self.attack.generate(x_vecs, labels)
-        #     correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)
+        adv_acc = 0.0
+        if set_to_use == 'test' or set_to_use == 'eval':
+            preds = self.attack.generate(x_vecs, labels)
+            correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)
+            adv_acc = float(correct_)/x_vecs.shape[0]
+
         #     print('Test\t',correct_, '\t', x_vecs.shape[0], '\t', correct_/x_vecs.shape[0], flush=True)
         # print(
         #     "Accuracy on original PGD adversarial samples after adversarial training: %.2f%%"
@@ -177,7 +180,7 @@ class Model(ABC):
         #        / x_vecs.shape[0]
         #        * 100)
         # )
-        return {ACCURACY_KEY: acc, 'loss': loss}
+        return {ACCURACY_KEY: acc, 'loss': loss, 'adv_acc': adv_acc}
 
     def close(self):
         self.sess.close()

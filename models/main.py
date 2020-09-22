@@ -75,12 +75,15 @@ def main():
     for i in range(num_rounds):
         if i < 300:
             ratio = 0.1
-        elif i >= 300 and i<500:
+        elif i >= 300 and i<600:
             ratio = 0.2
-        else:
+        elif i >= 600 and i<900:
             ratio = 0.3
-
-        print('--- Round %d of %d: Training %d Clients ratio %f---' % (i + 1, num_rounds, clients_per_round, ratio))
+        elif i >= 900 and i<1000:
+            ratio = 0.4
+        else:
+            ratio = 0.5
+        print('--- Round %d of %d: Training %d Clients ratio %f---' % (i + 1, num_rounds, clients_per_round, ratio), flush=True)
 
         # Select clients to train this round
         server.select_clients(i, online(clients), num_clients=clients_per_round)
