@@ -12,7 +12,7 @@ from utils.model_utils import batch_data
 from utils.tf_utils import graph_size
 
 import sys
-sys.path.append('/Users/ambrish/github/adversarial-robustness-toolbox/')
+sys.path.append('/dccstor/ambrish1/adversarial-robustness-toolbox/')
 from art.estimators.classification import TensorFlowClassifier
 from art.defences.trainer import AdversarialTrainerMadryPGD, AdversarialTrainer
 from art.attacks.evasion import ProjectedGradientDescent
@@ -46,7 +46,7 @@ class Model(ABC):
         )
 
         self.attack = ProjectedGradientDescent(
-            self.classifier, eps=0.3, eps_step=0.01, max_iter=40, num_random_init=1,
+            self.classifier, eps=0.1, eps_step=0.01, max_iter=40, num_random_init=1,
         )
 
         # self.adv_trainer = AdversarialTrainerMadryPGD(
@@ -143,12 +143,12 @@ class Model(ABC):
             self.adv_trainer = AdversarialTrainer(self.classifier, self.attack, ratio=ratio)
             self.adv_trainer.fit(input_data, target_data, batch_size=input_data.shape[0], nb_epochs=1)
 
-            # with self.graph.as_default():
-            #     self.sess.run(self.train_op,
-            #         feed_dict={
-            #             self.features: input_data,
-            #             self.labels: target_data
-            #         })
+            #with self.graph.as_default():
+            #    self.sess.run(self.train_op,
+            #        feed_dict={
+            #            self.features: input_data,
+            #            self.labels: target_data
+            #        })
 
     def test(self, data, set_to_use='test'):
         """
@@ -170,7 +170,7 @@ class Model(ABC):
         adv_acc = 0.0
         if set_to_use == 'test' or set_to_use == 'eval':
             preds = self.attack.generate(x_vecs, labels)
-            correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds)) == labels)
+            correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds),axis=1) == labels)
             adv_acc = float(correct_)/x_vecs.shape[0]
 
         #     print('Test\t',correct_, '\t', x_vecs.shape[0], '\t', correct_/x_vecs.shape[0], flush=True)

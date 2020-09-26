@@ -69,20 +69,12 @@ def main():
     print('--- Random Initialization ---')
     stat_writer_fn = get_stat_writer_function(client_ids, client_groups, client_num_samples, args)
     sys_writer_fn = get_sys_writer_function(args)
-    # print_stats(0, server, clients, client_num_samples, args, stat_writer_fn, args.use_val_set)
+    # print_stats(0, server, clients, client_num_samples, args, stat_writer_fn, args.use_val_set)
 
     # Simulate training
     for i in range(num_rounds):
-        if i < 300:
-            ratio = 0.1
-        elif i >= 300 and i<600:
-            ratio = 0.2
-        elif i >= 600 and i<900:
-            ratio = 0.3
-        elif i >= 900 and i<1000:
-            ratio = 0.4
-        else:
-            ratio = 0.5
+        ratio = np.min(((int(i/200)+1)/10.0,0.5))
+        # ratio = 0.5*(1.0-np.cos(((i+1)/num_rounds)*np.pi))
         print('--- Round %d of %d: Training %d Clients ratio %f---' % (i + 1, num_rounds, clients_per_round, ratio), flush=True)
 
         # Select clients to train this round
