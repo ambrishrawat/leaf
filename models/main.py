@@ -20,8 +20,8 @@ from utils.model_utils import read_data
 STAT_METRICS_PATH = 'metrics/stat_metrics.csv'
 SYS_METRICS_PATH = 'metrics/sys_metrics.csv'
 
-def main():
 
+def main():
     args = parse_args()
 
     # Set the random seed if provided (affects client sampling, and batching)
@@ -33,7 +33,7 @@ def main():
     if not os.path.exists(model_path):
         print('Please specify a valid dataset and a valid model.')
     model_path = '%s.%s' % (args.dataset, args.model)
-    
+
     print('############################## %s ##############################' % model_path)
     mod = importlib.import_module(model_path)
     ClientModel = getattr(mod, 'ClientModel')
@@ -69,30 +69,31 @@ def main():
     print('--- Random Initialization ---')
     stat_writer_fn = get_stat_writer_function(client_ids, client_groups, client_num_samples, args)
     sys_writer_fn = get_sys_writer_function(args)
-    # print_stats(0, server, clients, client_num_samples, args, stat_writer_fn, args.use_val_set)
+    #  print_stats(0, server, clients, client_num_samples, args, stat_writer_fn, args.use_val_set)
 
     # Simulate training
     for i in range(num_rounds):
-        ratio = np.min(((int(i/200)+1)/10.0,0.5))
+        ratio = np.min(((int(i / 200) + 1) / 10.0, 0.5))
         # ratio = 0.5*(1.0-np.cos(((i+1)/num_rounds)*np.pi))
-        print('--- Round %d of %d: Training %d Clients ratio %f---' % (i + 1, num_rounds, clients_per_round, ratio), flush=True)
+        print('--- Round %d of %d: Training %d Clients ratio %f---' % (i + 1, num_rounds, clients_per_round, ratio),
+              flush=True)
 
         # Select clients to train this round
         server.select_clients(i, online(clients), num_clients=clients_per_round)
         c_ids, c_groups, c_num_samples = server.get_clients_info(server.selected_clients)
 
-
         # Simulate server model training on selected clients' data
-        sys_metrics = server.train_model(num_epochs=args.num_epochs, batch_size=args.batch_size, minibatch=args.minibatch, ratio=ratio)
+        sys_metrics = server.train_model(num_epochs=args.num_epochs, batch_size=args.batch_size,
+                                         minibatch=args.minibatch, ratio=ratio)
         sys_writer_fn(i + 1, c_ids, sys_metrics, c_groups, c_num_samples)
-        
+
         # Update server model
         server.update_model()
 
         # Test model
         if (i + 1) % eval_every == 0 or (i + 1) == num_rounds:
             print_stats(i + 1, server, clients, client_num_samples, args, stat_writer_fn, args.use_val_set)
-    
+
     # Save server model
     ckpt_path = os.path.join('checkpoints', args.dataset)
     if not os.path.exists(ckpt_path):
@@ -102,6 +103,7 @@ def main():
 
     # Close models
     server.close_model()
+
 
 def online(clients):
     """We assume all users are always online."""
@@ -133,26 +135,25 @@ def setup_clients(dataset, model=None, use_val_set=False):
 
 
 def get_stat_writer_function(ids, groups, num_samples, args):
-
     def writer_fn(num_round, metrics, partition):
         metrics_writer.print_metrics(
-            num_round, ids, metrics, groups, num_samples, partition, args.metrics_dir, '{}_{}'.format(args.metrics_name, 'stat'))
+            num_round, ids, metrics, groups, num_samples, partition, args.metrics_dir,
+            '{}_{}'.format(args.metrics_name, 'stat'))
 
     return writer_fn
 
 
 def get_sys_writer_function(args):
-
     def writer_fn(num_round, ids, metrics, groups, num_samples):
         metrics_writer.print_metrics(
-            num_round, ids, metrics, groups, num_samples, 'train', args.metrics_dir, '{}_{}'.format(args.metrics_name, 'sys'))
+            num_round, ids, metrics, groups, num_samples, 'train', args.metrics_dir,
+            '{}_{}'.format(args.metrics_name, 'sys'))
 
     return writer_fn
 
 
 def print_stats(
-    num_round, server, clients, num_samples, args, writer, use_val_set):
-    
+        num_round, server, clients, num_samples, args, writer, use_val_set):
     train_stat_metrics = server.test_model(clients, set_to_use='train')
     print_metrics(train_stat_metrics, num_samples, prefix='train_')
     writer(num_round, train_stat_metrics, 'train')

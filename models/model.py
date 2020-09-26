@@ -12,10 +12,12 @@ from utils.model_utils import batch_data
 from utils.tf_utils import graph_size
 
 import sys
-sys.path.append('/dccstor/ambrish1/adversarial-robustness-toolbox/')
+
+sys.path.append('/Users/ambrish/github/adversarial-robustness-toolbox/')
 from art.estimators.classification import TensorFlowClassifier
 from art.defences.trainer import AdversarialTrainerMadryPGD, AdversarialTrainer
 from art.attacks.evasion import ProjectedGradientDescent
+
 
 class Model(ABC):
 
@@ -34,7 +36,7 @@ class Model(ABC):
         self.size = graph_size(self.graph)
 
         self.classifier = TensorFlowClassifier(
-            clip_values=(0,1),
+            clip_values=(0, 1),
             input_ph=self.features,
             output=self.logits,
             labels_ph=self.labels,
@@ -93,7 +95,6 @@ class Model(ABC):
     def sess_(self):
         return self.sess
 
-
     @abstractmethod
     def create_model(self):
         """Creates the model for the task.
@@ -126,13 +127,12 @@ class Model(ABC):
             self.run_epoch(data, batch_size, ratio)
 
         update = self.get_params()
-        comp = num_epochs * (len(data['y'])//batch_size) * batch_size * self.flops
+        comp = num_epochs * (len(data['y']) // batch_size) * batch_size * self.flops
         return comp, update
 
     def run_epoch(self, data, batch_size, ratio):
 
         for batched_x, batched_y in batch_data(data, batch_size, seed=self.seed):
-            
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
 
@@ -143,7 +143,7 @@ class Model(ABC):
             self.adv_trainer = AdversarialTrainer(self.classifier, self.attack, ratio=ratio)
             self.adv_trainer.fit(input_data, target_data, batch_size=input_data.shape[0], nb_epochs=1)
 
-            #with self.graph.as_default():
+            # with self.graph.as_default():
             #    self.sess.run(self.train_op,
             #        feed_dict={
             #            self.features: input_data,
@@ -170,8 +170,8 @@ class Model(ABC):
         adv_acc = 0.0
         if set_to_use == 'test' or set_to_use == 'eval':
             preds = self.attack.generate(x_vecs, labels)
-            correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds),axis=1) == labels)
-            adv_acc = float(correct_)/x_vecs.shape[0]
+            correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds), axis=1) == labels)
+            adv_acc = float(correct_) / x_vecs.shape[0]
 
         #     print('Test\t',correct_, '\t', x_vecs.shape[0], '\t', correct_/x_vecs.shape[0], flush=True)
         # print(
