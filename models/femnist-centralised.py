@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 import sys
+import time
 
 sys.path.append('/dccstor/ambrish1/adversarial-robustness-toolbox/')
 from art.estimators.classification import TensorFlowClassifier
@@ -79,16 +80,41 @@ attack = ProjectedGradientDescent(
     classifier, eps=0.3, eps_step=0.01, max_iter=40, num_random_init=1,
 )
 
-sess.run(tf.global_variables_initializer())
 
-for e in range(20):
+sess.run(tf.global_variables_initializer())
+counter = 0
+indices = np.arrange(X_train.shape)
+for e in range(4):
+    epoch_s = time.time()
+    np.random.shuffle(indices)
+    for batch_index in range(int(np.ceil(X_train.shape[0] / float(128)))):
+        batch_s = time.time()
+        counter+=1
+        begin, end = (
+            batch_index * 128,
+            min((batch_index + 1) * 128, X_train.shape[0]),
+        )
+        X_batch, y_batch = X_train[indices[begin:end]], y_train[indices[begin:end]]
+
+        ratio = np.min(((int(counter / 1000) + 1) / 10.0, 1.0))
+
+        adv_trainer = AdversarialTrainer(classifier, attack, ratio=ratio)
+        adv_trainer.fit(X_train, y_train, batch_size=128, nb_epochs=1)
+        print('Batch time: ', time.time() - epoch_s, flush=True)
+
+    acc = np.mean(np.argmax(classifier.predict(X_test), axis=1) == y_test)
+    print('accuracy: ', acc, 'Epoch time: ', time.time()-epoch_s, flush=True)
+
+for e in range(100):
+    epoch_s = time.time()
     ratio = np.min(((int(e / 10) + 1) / 10.0, 1.0))
     print('running epoch %d eation %f', e, ratio, flush=True)
     adv_trainer = AdversarialTrainer(classifier, attack, ratio=ratio)
     adv_trainer.fit(X_train, y_train, batch_size=128, nb_epochs=1)
-    if (e + 1) % 10 == 0:
-        acc = np.mean(np.argmax(classifier.predict(X_test), axis=1) == y_test)
-        print('accuracy: ', acc, flush=True)
+
+    acc = np.mean(np.argmax(classifier.predict(X_test), axis=1) == y_test)
+    print('accuracy: ', acc, flush=True)
+    print('Epoch time: ', time.time()-epoch_s)
 
 acc = np.mean(np.argmax(classifier.predict(X_test), axis=1) == y_test)
 preds = attack.generate(X_test, y_test)
