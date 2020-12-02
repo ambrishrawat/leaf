@@ -13,7 +13,7 @@ from utils.tf_utils import graph_size
 
 import sys
 
-sys.path.append('/Users/ambrish/github/adversarial-robustness-toolbox/')
+sys.path.append('/dccstor/ambrish1/adversarial-robustness-toolbox/')
 from art.estimators.classification import TensorFlowClassifier
 from art.defences.trainer import AdversarialTrainerMadryPGD, AdversarialTrainer
 from art.attacks.evasion import ProjectedGradientDescent
@@ -124,6 +124,7 @@ class Model(ABC):
                 corresponding to a variable in the resulting graph
         """
         for _ in range(num_epochs):
+            self.ALT_TOKEN = True
             self.run_epoch(data, batch_size, ratio)
 
         update = self.get_params()
@@ -135,21 +136,22 @@ class Model(ABC):
         for batched_x, batched_y in batch_data(data, batch_size, seed=self.seed):
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
-
+            if self.ALT_TOKEN is True:
             self.attack = ProjectedGradientDescent(
                 self.classifier, eps=0.3, eps_step=0.01, max_iter=40, num_random_init=1,
             )
 
             self.adv_trainer = AdversarialTrainer(self.classifier, self.attack, ratio=ratio)
             self.adv_trainer.fit(input_data, target_data, batch_size=input_data.shape[0], nb_epochs=1)
-
-            # with self.graph.as_default():
+            #self.ALT_TOKEN = False
+            # else:
+            #with self.graph.as_default():
             #    self.sess.run(self.train_op,
             #        feed_dict={
             #            self.features: input_data,
             #            self.labels: target_data
             #        })
-
+            #    self.ALT_TOKEN = True
     def test(self, data, set_to_use='test'):
         """
         Tests the current model on the given data.

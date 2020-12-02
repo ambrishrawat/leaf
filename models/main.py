@@ -73,8 +73,13 @@ def main():
 
     # Simulate training
     for i in range(num_rounds):
-        ratio = np.min(((int(i / 200) + 1) / 10.0, 0.5))
-        # ratio = 0.5*(1.0-np.cos(((i+1)/num_rounds)*np.pi))
+        # ratio = np.min(((int(i / 100) + 1) / 10.0, 0.5))
+        if i < args.jump:
+            ratio = 0.1
+            # ratio = 0.5*(1.0-np.cos(((i+1)/2000)*np.pi))
+        else:
+            ratio = args.maxratio
+        # ratio = np.min((0.5*0.5*(1.0-np.cos(((i+1)/1000)*np.pi)),0.5))
         print('--- Round %d of %d: Training %d Clients ratio %f---' % (i + 1, num_rounds, clients_per_round, ratio),
               flush=True)
 

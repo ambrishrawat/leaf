@@ -16,6 +16,14 @@ def parse_args():
                     help='name of model;',
                     type=str,
                     required=True)
+    parser.add_argument('-maxratio',
+                    help='number of rounds to simulate;',
+                    type=float,
+                    default=-0.5)
+    parser.add_argument('-jump',
+                    help='number of rounds to simulate;',
+                    type=int,
+                    default=200)
     parser.add_argument('--num-rounds',
                     help='number of rounds to simulate;',
                     type=int,
