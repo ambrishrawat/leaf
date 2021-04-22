@@ -83,8 +83,8 @@ attack = ProjectedGradientDescent(
 
 sess.run(tf.global_variables_initializer())
 counter = 0
-indices = np.arrange(X_train.shape)
-for e in range(4):
+indices = np.arange(X_train.shape[0])
+for e in range(3):
     epoch_s = time.time()
     np.random.shuffle(indices)
     for batch_index in range(int(np.ceil(X_train.shape[0] / float(128)))):
@@ -99,24 +99,26 @@ for e in range(4):
         ratio = np.min(((int(counter / 1000) + 1) / 10.0, 1.0))
 
         adv_trainer = AdversarialTrainer(classifier, attack, ratio=ratio)
-        adv_trainer.fit(X_train, y_train, batch_size=128, nb_epochs=1)
-        print('Batch time: ', time.time() - epoch_s, flush=True)
+        adv_trainer.fit(X_batch, y_batch, batch_size=128, nb_epochs=1)
+        print(counter, 'Batch time: ', time.time() - batch_s, 'ratio', ratio, flush=True)
 
     acc = np.mean(np.argmax(classifier.predict(X_test), axis=1) == y_test)
     print('accuracy: ', acc, 'Epoch time: ', time.time()-epoch_s, flush=True)
 
-for e in range(100):
+'''
+
+for e in range(3):
     epoch_s = time.time()
-    ratio = np.min(((int(e / 10) + 1) / 10.0, 1.0))
-    print('running epoch %d eation %f', e, ratio, flush=True)
-    adv_trainer = AdversarialTrainer(classifier, attack, ratio=ratio)
+    ratio = np.max(((int(e / 10) + 1) / 10.0, 1.0))
+    print('running epoch %d ratio %f', e, ratio, flush=True)
+    adv_trainer = AdversarialTrainer(classifier, attack, ratio=1.0)
     adv_trainer.fit(X_train, y_train, batch_size=128, nb_epochs=1)
 
     acc = np.mean(np.argmax(classifier.predict(X_test), axis=1) == y_test)
-    print('accuracy: ', acc, flush=True)
-    print('Epoch time: ', time.time()-epoch_s)
-
+    print('accuracy:\t ', acc, '\tepoch time: \t', time.time()-epoch_s, flush=True)
+'''
 acc = np.mean(np.argmax(classifier.predict(X_test), axis=1) == y_test)
+
 preds = attack.generate(X_test, y_test)
 adv_acc = np.mean(np.argmax(classifier.predict(preds), axis=1) == y_test)
 print(acc, adv_acc, flush=True)

@@ -136,7 +136,7 @@ class Model(ABC):
         for batched_x, batched_y in batch_data(data, batch_size, seed=self.seed):
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
-            if self.ALT_TOKEN is True:
+            # if self.ALT_TOKEN is True:
             self.attack = ProjectedGradientDescent(
                 self.classifier, eps=0.3, eps_step=0.01, max_iter=40, num_random_init=1,
             )
@@ -169,9 +169,14 @@ class Model(ABC):
                 feed_dict={self.features: x_vecs, self.labels: labels}
             )
         acc = float(tot_acc) / x_vecs.shape[0]
+
+        attack = ProjectedGradientDescent(
+            self.classifier, eps=0.3, eps_step=0.01, max_iter=100, num_random_init=40,
+        )
+
         adv_acc = 0.0
         if set_to_use == 'test' or set_to_use == 'eval':
-            preds = self.attack.generate(x_vecs, labels)
+            preds = attack.generate(x_vecs, labels)
             correct_ = np.sum(np.argmax(self.adv_trainer.predict(preds), axis=1) == labels)
             adv_acc = float(correct_) / x_vecs.shape[0]
 
